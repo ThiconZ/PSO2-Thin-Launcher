@@ -11,3 +11,4 @@ To provide flexibility in how the launcher is used, a number of launch arguments
 * --NotifyExit - Makes a notification popup when the game exits and the launcher detects it to begin exiting itself.
 * --SkipNotify - Prevents all notifications from the Thin Launcher from appearing.
 * --OutputString - Makes status updates write to STDOUT so that other applications can launch the Thin Launcher and monitor its progress.
+* --DetectRealPath - Detects the actual install path of the game client instead of trusting the SymLink.

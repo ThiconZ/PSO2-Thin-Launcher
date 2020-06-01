@@ -29,6 +29,7 @@ namespace PSO2_Thin_Launcher
         bool NotifyOnExit = false;
         bool SkipNotify = false;
         bool OutputString = false;
+        bool DetectRealPath = false;
 
         string GameDocsDir => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "SEGA", "PHANTASYSTARONLINE2_NA");
         string GameLauncherPath => Path.Combine(GamePath, $"{Binary_Launcher}.exe");
@@ -51,6 +52,34 @@ namespace PSO2_Thin_Launcher
 
         private void Launcher_Load(object sender, EventArgs e)
         {
+            // Handle any launch arguments passed in
+            foreach (string argument in Environment.GetCommandLineArgs())
+            {
+                switch (argument.ToLower())
+                {
+                    case "--skipupdate":
+                        SkipUpdateCheck = true;
+                        break;
+                    case "--fastlaunch":
+                        FastLaunch = true;
+                        break;
+                    case "--notifyexit":
+                        NotifyOnExit = true;
+                        break;
+                    case "--skipnotify":
+                        SkipNotify = true;
+                        break;
+                    case "--outputstring":
+                        OutputString = true;
+                        break;
+                    case "--detectrealpath":
+                        DetectRealPath = true;
+                        break;
+                    default:
+                        break;
+                }
+            }
+
             LogMessage("Loading");
             // Setup our tray icon that will be displayed while the launcher is in the background
             TrayIcon = new NotifyIcon
@@ -75,31 +104,6 @@ namespace PSO2_Thin_Launcher
             }
 
             TrayIcon.Visible = true;
-
-            // Handle any launch arguments passed in
-            foreach(string argument in Environment.GetCommandLineArgs())
-            {
-                switch (argument.ToLower())
-                {
-                    case "--skipupdate":
-                        SkipUpdateCheck = true;
-                        break;
-                    case "--fastlaunch":
-                        FastLaunch = true;
-                        break;
-                    case "--notifyexit":
-                        NotifyOnExit = true;
-                        break;
-                    case "--skipnotify":
-                        SkipNotify = true;
-                        break;
-                    case "--outputstring":
-                        OutputString = true;
-                        break;
-                    default:
-                        break;
-                }
-            }
             
             if (FastLaunch)
             {
@@ -129,6 +133,19 @@ namespace PSO2_Thin_Launcher
             // Check if game is installed
             IEnumerable<Package> packages = packageManager.FindPackages();
             Package appPackage = packages.FirstOrDefault(x => x.Id.Name == GAME_STORE_ID);
+
+            if(DetectRealPath)
+            {
+                IEnumerable<PackageVolume> packageVolumes = packageManager.FindPackageVolumes();
+                foreach (var volume in packageVolumes)
+                {
+                    string searchDirectory = volume.MountPoint + @"\Program Files\ModifiableWindowsApps\pso2_bin";
+                    if (Directory.Exists(searchDirectory))
+                    {
+                        return searchDirectory;
+                    }
+                }
+            }
 
             // Return back the symlink to install location
             return appPackage?.MutableLocation?.Path;
