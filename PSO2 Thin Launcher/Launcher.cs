@@ -30,6 +30,8 @@ namespace PSO2_Thin_Launcher
         bool SkipNotify = false;
         bool OutputString = false;
         bool DetectRealPath = false;
+        bool NoOptimization = false;
+        bool UseStartup = false;
 
         string GameDocsDir => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "SEGA", "PHANTASYSTARONLINE2_NA");
         string GameLauncherPath => Path.Combine(GamePath, $"{Binary_Launcher}.exe");
@@ -75,9 +77,21 @@ namespace PSO2_Thin_Launcher
                     case "--detectrealpath":
                         DetectRealPath = true;
                         break;
+                    case "--nooptimization":
+                        NoOptimization = true;
+                        break;
+                    case "--usestartup":
+                        UseStartup = true;
+                        break;
                     default:
                         break;
                 }
+            }
+
+            // PSO2Startup.exe will not forward launch arguments to the game when it launches it. Instead we need to take over entirely and launch it on our own
+            if(NoOptimization == false || UseStartup == true)
+            {
+                Binary_Launcher = "pso2startup";
             }
 
             LogMessage("Loading");
@@ -238,10 +252,16 @@ namespace PSO2_Thin_Launcher
         {
             LogMessage("Performing launch");
             // Rename the original launcher to a temp file and rename the game to take its place
-            // Due to the memory optimization forced by the launcher we do this to avoid -optimization being added as a launch argument
+            // Due to the memory optimization forced by the launcher we do this to avoid -optimize being added as a launch argument
             RenameLauncherFiles(false);
 
-            Process.Start(GAME_STORE_LAUNCH_ID);
+            string LaunchArguments = "";
+            if(!NoOptimization)
+            {
+                LaunchArguments += " -optimize";
+            }
+
+            Process.Start(GAME_STORE_LAUNCH_ID, LaunchArguments);
             LogMessage("Game launched");
 
             this.Hide();
@@ -297,10 +317,32 @@ namespace PSO2_Thin_Launcher
                     File.Move(GameLauncherPath, GameLauncherPathTemp);
                 }
 
-                if (File.Exists(GameExePath) && !File.Exists(GameLauncherPath))
+                try
                 {
-                    File.Move(GameExePath, GameLauncherPath);
+                    if (File.Exists(GameExePath) && !File.Exists(GameLauncherPath))
+                    {
+                        File.Move(GameExePath, GameLauncherPath);
+                    }
                 }
+                catch (Exception)
+                {
+                    if(!File.Exists(GameLauncherPath))
+                    {
+                        string ErrorMessage = $"There was an error renaming {GameExePath} to {GameLauncherPath}. Would you like to try restoring the original file?";
+                        ErrorMessage += "\nNote this may still fail and require manual intervention.";
+                        ErrorMessage += "\n\nIf this fails please navigate to your install directory and manually rename the files. Until they are renamed you will be unable to launch the game.";
+                        ErrorMessage += "\n\nThe game install directory should contain the files [pso2.exe] and [pso2launcher.exe] and [pso2startup.exe] in order to be functional again.";
+                        ErrorMessage += "\nThe Thin Launcher will exit after attempting to rename the files to prevent any further issues.";
+                        if(MessageBox.Show(ErrorMessage, "PSO2 Thin Launcher - Error", MessageBoxButtons.YesNo, MessageBoxIcon.Error) == DialogResult.Yes)
+                        {
+                            string TempLauncherFile = Path.Combine(Path.GetTempPath(), $"{Binary_Launcher}.exe");
+                            File.Move(GameLauncherPathTemp, TempLauncherFile);
+                            File.Move(TempLauncherFile, GameLauncherPath);
+                            this.Close();
+                        }
+                    }
+                }
+                
             }
         }
 
@@ -327,6 +369,12 @@ namespace PSO2_Thin_Launcher
             RenameLauncherFiles(true);
 
             this.Close();
+        }
+
+        private void Launcher_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            // Dispose the system tray icon manually to avoid an artifact being stuck in the user's tray until an update is performed
+            TrayIcon.Dispose();
         }
     }
 }
