@@ -1,17 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Diagnostics;
-using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using Windows.Management.Deployment;
 using Windows.ApplicationModel;
+using Windows.Management.Deployment;
 
 namespace PSO2_Thin_Launcher
 {
@@ -268,6 +264,7 @@ namespace PSO2_Thin_Launcher
             {
                 TrayIcon.BalloonTipText = "Original file names have been restored.\nLauncher is now exiting.";
                 TrayIcon.ShowBalloonTip(5000);
+                TrayIcon.Visible = false;
             }
             System.Threading.Thread.Sleep(1000);
             LogMessage("Launcher exiting");
@@ -328,5 +325,11 @@ namespace PSO2_Thin_Launcher
 
             this.Close();
         }
-    }
+
+		private void Launcher_FormClosed(object sender, FormClosedEventArgs e)
+		{
+            TrayIcon.Visible = false;
+            TrayIcon.Icon = null;
+		}
+	}
 }
