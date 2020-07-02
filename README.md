@@ -1,5 +1,5 @@
 ﻿# PSO2 Thin Launcher
-This project is designed to provide an open source launcher that prevents PSO2 NA from launching with the Memory Optimization argument “-optimization”. By preventing the optimizations from being enabled, the constant hitching and lagging experienced while in intense areas such as the Lobby/Gate Area are completely eliminated.
+This project was originally designed to provide an open source launcher that prevents PSO2 NA from launching with the Memory Optimization argument “-optimize”. By preventing the optimizations from being enabled, the constant hitching and lagging experienced while in intense areas such as the Lobby/Gate Area are completely eliminated. Since these optimizations have been resolved this launcher now works as a method to launch the game directly instead of going through the official launcher each time.
 
 ![Screenshot](https://i.imgur.com/xnLxobX.png)
 
@@ -12,3 +12,5 @@ To provide flexibility in how the launcher is used, a number of launch arguments
 * --SkipNotify - Prevents all notifications from the Thin Launcher from appearing.
 * --OutputString - Makes status updates write to STDOUT so that other applications can launch the Thin Launcher and monitor its progress.
 * --DetectRealPath - Detects the actual install path of the game client instead of trusting the SymLink.
+* --NoOptimization - Prevents the "-optimize" launch argument from being enabled on the PSO2 client. Memory optimizations in PSO2 no longer cause issues like stuttering so "-optimize" is being enabled by default again.
+* --UseStartup - Causes the PSO2Startup.exe to be renamed instead of PSO2Launcher.exe. This allows changing the launch arguments the PSO2 client uses instead of only removing all arguments like before. This is automatically enabled if `--NoOptimization` is not set on the command line.
